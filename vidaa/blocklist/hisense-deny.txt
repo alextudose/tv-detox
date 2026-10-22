@@ -1,0 +1,37 @@
+# Candidate Hisense/VIDAA telemetry, ad and recommendation hosts.
+# Seeded from Okazakee/tv-dns-blocklist pihole/block.txt @ b89429960e22067287c669d76d1d28640b3800ee.
+# Only hosts the TV is seen querying in NextDNS logs get blocked, in batches of <=10.
+# Excluded on purpose: ads-privacy.vidaahub.com (the ad opt-out app must keep working).
+ter-jrnl-eu.vidaahub.com
+exc-jrnl-eu.vidaahub.com
+policy-jrnl-eu.vidaahub.com
+api-logsdk.hismarttv.com
+unified-ter-na.hismarttv.com
+unified-ter.hismarttv.com
+unified-exc.hismarttv.com
+api-cloudfalcon.hismarttv.com
+api-gps-eu.hismarttv.com
+api-gps-na.hismarttv.com
+api-gps-em.hismarttv.com
+rpt-ads.vidaahub.com
+rsc-ads.vidaahub.com
+rpt-mntz.vidaahub.com
+rsc-mntz.vidaahub.com
+rpt-mntz-azure.vidaahub.com
+monetization-ad-tracking.prod-eu-c.az.vidaahub.com
+monetization-tenant-ads.prod-eu-c.az.vidaahub.com
+ad-cmp.hismarttv.com
+ad-imp.hismarttv.com
+ad-download.hismarttv.com
+ad-download-mam.hismarttv.com
+ads-portal-cdn.vidaatv.net
+tracking-vss.vidaahub.com
+abtest-tv.vidaahub.com
+recommend-ui.vidaahub.com
+sttc-az-recommend-ui.vidaahub.com
+recommender-launcher.hismarttv.com
+api-4know-eu.hismarttv.com
+api-shoppingguider.hismarttv.com
+hisense-beacons.xumo.com
+hisense-lite-beacons.xumo.com
+acr.unruly.co

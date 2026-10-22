@@ -1,0 +1,3 @@
+[submodule "vidaa/vendor/sidee"]
+	path = vidaa/vendor/sidee
+	url = https://github.com/Empi9245/Sidee.git

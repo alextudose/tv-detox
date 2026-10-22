@@ -1,0 +1,21 @@
+# Never block: updates, app store, DRM, launcher, account, phone remote, time sync, casting.
+# From Okazakee/tv-dns-blocklist pihole/allow.txt @ b89429960e22067287c669d76d1d28640b3800ee, plus ads-privacy.
+upgrade-eu.hismarttv.com
+ota-tv.vidaahub.com
+download-upgrade.hismarttv.com
+cdn-plugin-sync-upgrade-juui.hismarttv.com
+appstore-vidaa.vidaahub.com
+app-appstore.hismarttv.com
+hub-msg.vidaahub.com
+params-msg-eu.vidaahub.com
+msg-eu.hismarttv.com
+auth-phone-eu.hismarttv.com
+auth-account.hismarttv.com
+vod-strm.vidaahub.com
+drm.hismarttv.com
+voiceservice-eu.hismarttv.com
+home-launcher.hismarttv.com
+synctime.hismarttv.com
+my.vidaa.com
+castreceiver.vidaatv.net
+ads-privacy.vidaahub.com

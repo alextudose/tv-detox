@@ -3,3 +3,14 @@ key.jks
 *.apk
 .DS_Store
 .idea
+
+# vidaa: runs hold TV photos and pairing tokens; never commit them
+vidaa/runs/
+vidaa/.venv/
+vidaa/.coverage
+vidaa/certs/
+vidaa/.env
+__pycache__/
+vidaa/.phonecam/
+vidaa/web/node_modules/
+vidaa/web/test-results/

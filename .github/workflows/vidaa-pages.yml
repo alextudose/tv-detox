@@ -1,0 +1,58 @@
+name: vidaa home
+
+on:
+  push:
+    branches: [vidaa]
+    paths: ["vidaa/**", ".github/workflows/vidaa-pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vidaa-pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: true
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: CLI tests (coverage >= 80%)
+        working-directory: vidaa
+        run: uv run coverage run -m unittest discover -s tests -t . && uv run coverage report
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Home logic tests (coverage >= 80%)
+        working-directory: vidaa/web
+        run: npm ci && npm test
+      - name: Home end-to-end tests
+        working-directory: vidaa/web
+        run: npx playwright install --with-deps chromium-headless-shell && npx playwright test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Keep only what the TV loads
+        run: |
+          mkdir _site
+          cd vidaa/web
+          cp -R index.html sw.js apps.json fonts.css icon.png js fonts icons wallpapers ../../_site/
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

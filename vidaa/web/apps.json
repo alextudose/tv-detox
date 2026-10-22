@@ -1,0 +1,61 @@
+{
+  "tiles": [
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "icon": "icons/netflix.png",
+      "bg": "#ffffff",
+      "kind": "app",
+      "app": "Netflix"
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "icon": "icons/youtube.png",
+      "bg": "#ffffff",
+      "kind": "app",
+      "app": "YouTube"
+    },
+    {
+      "id": "prime",
+      "name": "Prime Video",
+      "icon": "icons/prime.png",
+      "bg": "#0578ff",
+      "kind": "app",
+      "app": "Prime Video"
+    },
+    {
+      "id": "stremio",
+      "name": "Stremio",
+      "icon": "icons/stremio.png",
+      "bg": "#101020",
+      "kind": "app",
+      "app": "Stremio Lite",
+      "url": "https://relvhgchz5.strem.io/hello-world/index.html"
+    },
+    {
+      "id": "appletv",
+      "name": "Apple TV",
+      "icon": "icons/appletv.png",
+      "bg": "#303030",
+      "fit": "cover",
+      "kind": "app",
+      "app": "Apple TV",
+      "url": "https://atve.tv.apple.com/94819831-5404-4438-810e-afb648d6a826/tvw_1dc2aab0a313427dbc11818be8a18bd9/"
+    },
+    {
+      "id": "livetv",
+      "name": { "ro": "Televizor", "en": "Live TV" },
+      "glyph": "antenna",
+      "kind": "source",
+      "source": "TV"
+    },
+    {
+      "id": "console",
+      "name": { "ro": "Consolă", "en": "Console" },
+      "glyph": "gamepad",
+      "kind": "source",
+      "source": "HDMI1"
+    }
+  ]
+}
