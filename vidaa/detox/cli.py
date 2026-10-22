@@ -52,12 +52,16 @@ def _fetch(url: str) -> tuple[str, str]:
         return r.read().decode("utf-8", "replace"), r.headers.get("Date", "")
 
 
-def pick_camera(control_port: int = phonecam.CONTROL_PORT):
+PHONECAM_DIR = Path(__file__).resolve().parent.parent / ".phonecam"
+
+
+def pick_camera(control_port: int = phonecam.CONTROL_PORT, token_file: Path = PHONECAM_DIR / "control-token"):
     """The phone camera page when its server is running, else the Mac's camera."""
     with socket.socket() as probe:
         probe.settimeout(0.3)
         if probe.connect_ex(("127.0.0.1", control_port)) == 0:
-            return phonecam.PhoneCamera(f"http://127.0.0.1:{control_port}")
+            token = token_file.read_text().strip() if token_file.exists() else ""
+            return phonecam.PhoneCamera(f"http://127.0.0.1:{control_port}", token=token)
     return Camera()
 
 
@@ -301,6 +305,7 @@ def cmd_home(args, deps: Deps) -> int:
         raise
     manifest.mark(entry, "applied")
     (deps.runs / "home-url").write_text(url)
+    (deps.runs / "home-tile-id").write_text(args.tile_id)
     print(f"home tile {args.tile_id!r} -> {url}")
     return 0
 
@@ -360,7 +365,9 @@ def cmd_relay(args, deps: Deps) -> int:
         return 0
     ip = _lan_ip(deps.host)  # relay run
     tiles = json.loads((WEB / "apps.json").read_text())["tiles"]
-    relay = relay_mod.Relay(deps.tv(deps.host), tiles, token, HOME_ID, home_file.read_text().strip(),
+    tile_file = deps.runs / "home-tile-id"
+    home_id = tile_file.read_text().strip() if tile_file.exists() else HOME_ID
+    relay = relay_mod.Relay(deps.tv(deps.host), tiles, token, home_id, home_file.read_text().strip(),
                             f"http://{ip}:{RELAY_PORT}/{token}", args.auto_home)
     relay_mod.serve(relay, ip, RELAY_PORT)
     print(f"relay on http://{ip}:{RELAY_PORT}/<token> (auto-home {'on' if args.auto_home else 'off'})", flush=True)
@@ -474,7 +481,10 @@ def _tls_context(folder: Path, ip: str) -> ssl.SSLContext:
 def cmd_phonecam(args, deps: Deps) -> int:
     ip = _lan_ip(deps.host)
     token = phonecam.secrets.token_urlsafe(6)
-    phonecam.serve(ip, token=token, tls=_tls_context(deps.runs.parent / ".phonecam", ip))
+    _, control = phonecam.serve(ip, token=token, tls=_tls_context(PHONECAM_DIR, ip))
+    token_file = PHONECAM_DIR / "control-token"
+    token_file.write_text(control.control_token)
+    os.chmod(token_file, 0o600)
     url = f"https://{ip}:{phonecam.PHONE_PORT}/{token}/"
     print("Scan with the iPhone camera, or open in Safari:\n" + "\n".join(qr_lines(url)) + f"\n{url}", flush=True)
     print("Safari: Show Details > visit this website, then allow the camera and tap Start.", flush=True)

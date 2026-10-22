@@ -128,16 +128,25 @@ def _phone_handler(broker: FrameBroker, token: str):
     return Phone
 
 
-def _control_handler(broker: FrameBroker, capture_timeout: float):
+def _control_handler(broker: FrameBroker, capture_timeout: float, token: str):
     class Control(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
 
+        def _refuse(self, code: int):
+            self.send_response(code)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
         def do_POST(self):
+            port = self.server.server_port
+            # a secret only this Mac's CLI knows, and an exact Host so a rebound
+            # DNS name in a browser can't pass as localhost
+            if (not secrets.compare_digest(self.headers.get("X-Capture-Token", ""), token)
+                    or self.headers.get("Host") not in (f"127.0.0.1:{port}", f"localhost:{port}")):
+                return self._refuse(403)
             if self.path != "/capture":
-                self.send_response(404)
-                self.end_headers()
-                return
+                return self._refuse(404)
             frame = broker.request(capture_timeout)
             self.send_response(200 if frame else 504)
             self.send_header("Content-Length", str(len(frame or b"")))
@@ -148,14 +157,16 @@ def _control_handler(broker: FrameBroker, capture_timeout: float):
 
 
 def serve(phone_host: str, phone_port: int = PHONE_PORT, control_port: int = CONTROL_PORT,
-          token: str | None = None, tls=None, capture_timeout: float = 15.0):
+          token: str | None = None, tls=None, capture_timeout: float = 15.0, control_token: str | None = None):
     """Start the phone listener (TLS on the LAN) and the local control
     listener. Returns both servers, already serving in background threads."""
     broker = FrameBroker()
     phone = ThreadingHTTPServer((phone_host, phone_port), _phone_handler(broker, token or secrets.token_urlsafe(8)))
     if tls is not None:
         phone.socket = tls.wrap_socket(phone.socket, server_side=True)
-    control = ThreadingHTTPServer(("127.0.0.1", control_port), _control_handler(broker, capture_timeout))
+    control_token = control_token or secrets.token_urlsafe(16)
+    control = ThreadingHTTPServer(("127.0.0.1", control_port), _control_handler(broker, capture_timeout, control_token))
+    control.control_token = control_token
     for server in (phone, control):
         server.daemon_threads = True
         threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -165,14 +176,17 @@ def serve(phone_host: str, phone_port: int = PHONE_PORT, control_port: int = CON
 class PhoneCamera:
     """Same interface as shot.Camera, backed by the phone page."""
 
-    def __init__(self, control_url: str = f"http://127.0.0.1:{CONTROL_PORT}", timeout: float = 20.0):
+    def __init__(self, control_url: str = f"http://127.0.0.1:{CONTROL_PORT}", timeout: float = 20.0,
+                 token: str | None = None):
         self.control_url = control_url
         self.timeout = timeout
+        self.token = token or ""
 
     def capture(self, out: str | Path) -> Path:
         out = Path(out)
         try:
-            req = urllib.request.Request(self.control_url + "/capture", data=b"", method="POST")
+            req = urllib.request.Request(self.control_url + "/capture", data=b"", method="POST",
+                                         headers={"X-Capture-Token": self.token})
             with urllib.request.urlopen(req, timeout=self.timeout + 5) as r:
                 frame = r.read()
         except urllib.error.HTTPError as e:

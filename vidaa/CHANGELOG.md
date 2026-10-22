@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 (2026-10-22)
+
+- Fix: the phone camera's local control endpoint now requires a random token and an exact
+  `127.0.0.1`/`localhost` Host header, so a web page can't reach it through DNS rebinding.
+- Fix: the relay reopens the home with the tile id it was installed under (`home install --tile-id`),
+  so taking over an existing tile works.
+
 ## 0.1.0 (2026-10-22)
 
 First version for Hisense VIDAA TVs.

@@ -2,7 +2,6 @@ import json
 import unittest
 
 from detox.tv import TV, TVError
-
 from tests.fake_tv import MOBILE, FakeTVSession, runner_for
 
 BROADCAST_STATE = "/remoteapp/mobile/broadcast/ui_service/state"

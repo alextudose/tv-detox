@@ -10,7 +10,6 @@ from typing import ClassVar
 
 from detox.cli import Deps, main
 from detox.tv import TV
-
 from tests.fake_tv import MOBILE, FakeTVSession, runner_for
 from tests.test_tv import APPS, SOURCES
 
@@ -310,6 +309,12 @@ class HomeAndRelayTest(CliFixture):
         self.assertEqual([(e["kind"], e["target"], e["status"]) for e in self.manifest()],
                          [("tile", "calmhome", "applied")])
         self.assertEqual((self.deps.runs / "home-url").read_text(), "https://alextudose.github.io/tv-detox/")
+
+    def test_home_install_can_take_over_an_existing_tile_and_remembers_which(self):
+        self.run_cli("home", "install", "--url", "https://alextudose.github.io/tv-detox/", "--tile-id", "detoxprobe")
+
+        self.assertEqual(self.tiles_added[0][0], "detoxprobe")
+        self.assertEqual((self.deps.runs / "home-tile-id").read_text(), "detoxprobe")
 
     def test_home_install_refuses_a_non_https_address(self):
         code, _, _ = self.run_cli("home", "install", "--url", "http://example.com/")

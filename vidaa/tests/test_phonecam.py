@@ -49,10 +49,11 @@ class BrokerTest(unittest.TestCase):
 class ServerTest(unittest.TestCase):
     def setUp(self):
         self.servers = serve(phone_host="127.0.0.1", phone_port=0, control_port=0, token="t0k3n", tls=None,
-                             capture_timeout=1)
+                             capture_timeout=1, control_token="c0ntr0l")
         phone, control = self.servers
         self.phone_base = f"http://127.0.0.1:{phone.server_port}/t0k3n/"
-        self.camera = PhoneCamera(f"http://127.0.0.1:{control.server_port}", timeout=5)
+        self.control_url = f"http://127.0.0.1:{control.server_port}"
+        self.camera = PhoneCamera(self.control_url, timeout=5, token="c0ntr0l")
         self.dir = tempfile.TemporaryDirectory()
 
     def tearDown(self):
@@ -76,12 +77,27 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(raised.exception.code, 404)
 
     def test_no_phone_connected_is_a_camera_error(self):
-        camera = PhoneCamera(self.camera.control_url, timeout=0.5)
+        camera = PhoneCamera(self.camera.control_url, timeout=0.5, token="c0ntr0l")
 
         with self.assertRaises(CameraError) as raised:
             camera.capture(Path(self.dir.name) / "x.jpg")
 
         self.assertIn("phone", str(raised.exception).lower())
+
+    def _capture_status(self, headers):
+        req = urllib.request.Request(self.control_url + "/capture", data=b"", method="POST", headers=headers)
+        try:
+            return urllib.request.urlopen(req, timeout=5).status
+        except urllib.error.HTTPError as e:
+            return e.code
+
+    def test_capture_needs_the_control_token(self):
+        self.assertEqual(self._capture_status({}), 403)
+        self.assertEqual(self._capture_status({"X-Capture-Token": "guess"}), 403)
+
+    def test_capture_rejects_a_foreign_host_header_against_dns_rebinding(self):
+        port = self.servers[1].server_port
+        self.assertEqual(self._capture_status({"X-Capture-Token": "c0ntr0l", "Host": f"evil.example:{port}"}), 403)
 
     def test_server_not_running_is_a_camera_error(self):
         with self.assertRaises(CameraError):
@@ -93,7 +109,8 @@ class WiringTest(unittest.TestCase):
         from detox.cli import pick_camera
         from detox.shot import Camera
 
-        phone, control = serve(phone_host="127.0.0.1", phone_port=0, control_port=0, token="x", tls=None)
+        phone, control = serve(phone_host="127.0.0.1", phone_port=0, control_port=0, token="x", tls=None,
+                               control_token="c")
         try:
             self.assertIsInstance(pick_camera(control.server_port), PhoneCamera)
         finally:
