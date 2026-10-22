@@ -421,3 +421,49 @@ class RestoreTest(CliFixture):
 
         self.assertEqual(code, 1)
         self.assertEqual([e["status"] for e in m.entries() if e["kind"] == "tile"], ["applied"])
+
+
+class TileRegistrationTest(unittest.TestCase):
+    class FakeSidee:
+        def __init__(self, tiles, ignore_install=False):
+            self.tiles, self.ignore_install, self.installed = tiles, ignore_install, []
+
+        class Session:
+            def load(self):
+                return "session"
+
+        def list_tiles(self, session):
+            return list(self.tiles)
+
+        def add_tile(self, session, app_id, name, url, image):
+            self.installed.append(app_id)
+            if not self.ignore_install:
+                # VIDAA 9 masks the URL of web tiles in its app list
+                self.tiles.append({"appId": app_id, "name": name, "url": f"HTTP_APP_DEFAULT_URL{app_id}"})
+            return list(self.tiles)
+
+    def test_confirms_by_id_and_name_because_the_tv_masks_tile_urls(self):
+        from detox.cli import _sidee_add_tile
+        fake = self.FakeSidee([{"appId": "1", "name": "Netflix"}])
+
+        _sidee_add_tile("calmhome", "Acasă", "https://alextudose.github.io/tv-detox/", "x.png", client=fake)
+
+        self.assertEqual(fake.installed, ["calmhome"])
+
+    def test_refuses_an_id_the_tv_already_has_since_it_ignores_reinstalls(self):
+        from detox.cli import _sidee_add_tile
+        from detox.tv import TVError
+        fake = self.FakeSidee([{"appId": "detoxprobe", "name": "Detox probe"}])
+
+        with self.assertRaises(TVError) as raised:
+            _sidee_add_tile("detoxprobe", "Acasă", "https://h/", "x.png", client=fake)
+
+        self.assertEqual(fake.installed, [])
+        self.assertIn("already has", str(raised.exception))
+
+    def test_an_install_the_tv_ignores_is_an_error(self):
+        from detox.cli import _sidee_add_tile
+        from detox.tv import TVError
+
+        with self.assertRaises(TVError):
+            _sidee_add_tile("calmhome", "Acasă", "https://h/", "x.png", client=self.FakeSidee([], ignore_install=True))

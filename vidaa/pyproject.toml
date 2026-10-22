@@ -1,6 +1,6 @@
 [project]
 name = "vidaa-detox"
-version = "0.1.1"
+version = "0.1.2"
 description = "Reversible debloat, backup/restore and a calm home screen for Hisense VIDAA TVs"
 requires-python = ">=3.12"
 dependencies = ["paho-mqtt>=1.6,<3"]

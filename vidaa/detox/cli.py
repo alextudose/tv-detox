@@ -35,10 +35,16 @@ HOME_ID = "calmhome"
 RELAY_PORT = 8788
 
 
-def _sidee_add_tile(app_id: str, name: str, url: str, image: str) -> None:
-    client = sidee()
-    apps = client.add_tile(client.Session().load(), app_id, name, url, image)
-    if not any(client.tile_matches_request(a, app_id, url) for a in apps):
+def _sidee_add_tile(app_id: str, name: str, url: str, image: str, client=None) -> None:
+    """Register a web tile. VIDAA 9 ignores an install for an id it already has
+    and hides tile URLs in its app list, so check the id before and the name after."""
+    client = client or sidee()
+    session = client.Session().load()
+    if any(t.get("appId") == app_id for t in client.list_tiles(session)):
+        raise TVError(f"the TV already has a tile {app_id!r} and ignores reinstalls; "
+                      "remove it on the TV (Apps > Apps on Home) or use another --tile-id")
+    apps = client.add_tile(session, app_id, name, url, image)
+    if not any(a.get("appId") == app_id and a.get("name") == name for a in apps):
         raise TVError(f"the TV did not confirm the {name} tile")
 
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2 (2026-10-22)
+
+- Fix: `home install` refuses a tile id the TV already has (VIDAA 9 silently ignores reinstalls
+  for an existing id) and confirms the new tile by id and name, since the TV can hide tile URLs.
+
 ## 0.1.1 (2026-10-22)
 
 - Fix: the phone camera's local control endpoint now requires a random token and an exact
